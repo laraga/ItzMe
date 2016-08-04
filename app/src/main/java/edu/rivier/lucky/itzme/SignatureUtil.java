@@ -1,4 +1,4 @@
-package com.example.lucky.itzme;
+package edu.rivier.lucky.itzme;
 
 import java.io.*;
 import java.security.*;
