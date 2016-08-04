@@ -21,47 +21,11 @@ import java.security.SignatureException;
 import java.security.spec.InvalidKeySpecException;
 
 
-
 public class MainActivity extends AppCompatActivity
 {
     //Uniform Resource Identifier (URI) reference
     private Uri imageToUploadUri=null;
 
-    private String getCertDir()
-    {
-        return (new ContextWrapper(this)).getApplicationInfo().dataDir + "/certificates";
-    }
-
-    private String getTempDir() throws IOException {
-        File tmpDir = new File(Environment.getExternalStorageDirectory() + "/itzme/tmp");
-        if (!tmpDir.exists())
-            tmpDir.mkdirs();
-        return tmpDir.getAbsolutePath();
-    }
-
-    private String getTempFile(String prefix, String extn) throws IOException {
-        File tmpDir = new File(getTempDir());
-        File outputFile = File.createTempFile(prefix, extn, tmpDir);
-        return outputFile.getAbsolutePath();
-    }
-
-    private String getZipFilePath() throws IOException {
-        File sigDir = new File(Environment.getExternalStorageDirectory() + "/itzme/signedimages");
-        if(!sigDir.exists())
-            sigDir.mkdirs();
-        File outputFile = File.createTempFile("IMG", ".simg", sigDir);
-
-        return outputFile.getAbsolutePath();
-    }
-
-    private String getOutPath() throws IOException {
-        File verDir = new File(Environment.getExternalStorageDirectory() + "/itzme/verifiedimages");
-        if(!verDir.exists())
-            verDir.mkdirs();
-        File outputFile = File.createTempFile("IMG", ".jpg", verDir);
-
-        return outputFile.getAbsolutePath();
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -76,7 +40,8 @@ public class MainActivity extends AppCompatActivity
                 Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
                 imageToUploadUri=null;
 
-                try {
+                try
+                {
                     File f = new File(getTempFile("IMG", ".jpg"));
                     intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(f));
                     imageToUploadUri = Uri.fromFile(f);
@@ -106,7 +71,8 @@ public class MainActivity extends AppCompatActivity
                                 // The code in this function will be executed when the dialog OK button is pushed
                                 chosenFile = chosenDir;
                                 //toastLong("Chosen FileOpenDialog File: " + chosenFile);
-                                try {
+                                try
+                                {
                                     String tmpDirStr = getTempFile("TMP", ".tmp");
                                     File tmpDir = new File(tmpDirStr);
                                     tmpDir.delete();
@@ -115,7 +81,8 @@ public class MainActivity extends AppCompatActivity
 
                                     ZipUtil.unzip(chosenFile, tmpDirStr);
                                     Log.d("Unzip", "Unzipped File Successfully");
-                                    if(SignatureUtil.verifySignature(tmpDirStr, "PUBKEY", "SIGNATURE", "IMGFILE")) {
+                                    if(SignatureUtil.verifySignature(tmpDirStr, "PUBKEY", "SIGNATURE", "IMGFILE"))
+                                    {
                                         toastLong("Verified");
                                         Log.d("Info", "Verified");
 
@@ -139,15 +106,31 @@ public class MainActivity extends AppCompatActivity
                                 catch (IOException e)
                                 {
                                     toastLong("Error: "+e.getMessage());
-                                } catch (NoSuchAlgorithmException e) {
                                     e.printStackTrace();
-                                } catch (InvalidKeyException e) {
+                                }
+                                catch (NoSuchAlgorithmException e)
+                                {
+                                    toastLong("Error: "+e.getMessage());
                                     e.printStackTrace();
-                                } catch (SignatureException e) {
+                                }
+                                catch (InvalidKeyException e)
+                                {
+                                    toastLong("Error: "+e.getMessage());
                                     e.printStackTrace();
-                                } catch (NoSuchProviderException e) {
+                                }
+                                catch (SignatureException e)
+                                {
+                                    toastLong("Error: "+e.getMessage());
                                     e.printStackTrace();
-                                } catch (InvalidKeySpecException e) {
+                                }
+                                catch (NoSuchProviderException e)
+                                {
+                                    toastLong("Error: "+e.getMessage());
+                                    e.printStackTrace();
+                                }
+                                catch (InvalidKeySpecException e)
+                                {
+                                    toastLong("Error: "+e.getMessage());
                                     e.printStackTrace();
                                 }
                             }
@@ -204,6 +187,43 @@ public class MainActivity extends AppCompatActivity
             Log.d("Itzme" ,"Result Cancelled");
         }
 
+    }
+/**************************** Utility Methods ****************************/
+
+    private String getCertDir()
+    {
+        return (new ContextWrapper(this)).getApplicationInfo().dataDir + "/certificates";
+    }
+
+    private String getTempDir() throws IOException {
+        File tmpDir = new File(Environment.getExternalStorageDirectory() + "/itzme/tmp");
+        if (!tmpDir.exists())
+            tmpDir.mkdirs();
+        return tmpDir.getAbsolutePath();
+    }
+
+    private String getTempFile(String prefix, String extn) throws IOException {
+        File tmpDir = new File(getTempDir());
+        File outputFile = File.createTempFile(prefix, extn, tmpDir);
+        return outputFile.getAbsolutePath();
+    }
+
+    private String getZipFilePath() throws IOException {
+        File sigDir = new File(Environment.getExternalStorageDirectory() + "/itzme/signedimages");
+        if(!sigDir.exists())
+            sigDir.mkdirs();
+        File outputFile = File.createTempFile("IMG", ".simg", sigDir);
+
+        return outputFile.getAbsolutePath();
+    }
+
+    private String getOutPath() throws IOException {
+        File verDir = new File(Environment.getExternalStorageDirectory() + "/itzme/verifiedimages");
+        if(!verDir.exists())
+            verDir.mkdirs();
+        File outputFile = File.createTempFile("IMG", ".jpg", verDir);
+
+        return outputFile.getAbsolutePath();
     }
 
     private void removeFile(String path)
