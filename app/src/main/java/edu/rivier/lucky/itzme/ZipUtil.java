@@ -13,7 +13,7 @@ public class ZipUtil {
 
 		addZipEntry(out, dataFile, "IMGFILE");
 		addZipEntry(out, signedFile, "SIGNATURE");
-		addZipEntry(out, pubKeyFile, "PUBKEY");
+		addZipEntry(out, pubKeyFile, "CERT");
 
 		out.close();
 	}

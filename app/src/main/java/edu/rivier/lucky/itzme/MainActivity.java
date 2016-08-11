@@ -18,6 +18,7 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.SignatureException;
+import java.security.cert.CertificateException;
 import java.security.spec.InvalidKeySpecException;
 
 
@@ -34,112 +35,123 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
 
         final Button button = (Button) findViewById(R.id.capturebtn);
-        button.setOnClickListener(new View.OnClickListener(){
-            public void onClick(View v)
-            {
-                Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                imageToUploadUri=null;
-
-                try
+        if (button != null)
+        {
+            button.setOnClickListener(new View.OnClickListener(){
+                public void onClick(View v)
                 {
-                    File f = new File(getTempFile("IMG", ".jpg"));
-                    intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(f));
-                    imageToUploadUri = Uri.fromFile(f);
+                    Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                    imageToUploadUri=null;
 
-                    startActivityForResult(intent, 1);
+                    try
+                    {
+                        File f = new File(getTempFile("IMG", ".jpg"));
+                        intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(f));
+                        imageToUploadUri = Uri.fromFile(f);
+
+                        startActivityForResult(intent, 1);
+                    }
+                    catch (IOException e)
+                    {
+                        toastLong("Error: "+e.getMessage());
+                        e.printStackTrace();
+                    }
                 }
-                catch (IOException e)
-                {
-                    Toast.makeText(MainActivity.this, "Exception! " + e.getMessage(), Toast.LENGTH_LONG).show();
-                }
-            }
-        });
+            });
+        }
 
         Button extractBtn = (Button)findViewById(R.id.extractbtn);
-        extractBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Log.d("Info", "Extract Button Clicked");
+        if (extractBtn != null)
+        {
+            extractBtn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Log.d("Info", "Extract Button Clicked");
 
-                SimpleFileDialog FileOpenDialog =  new SimpleFileDialog(MainActivity.this, "FileOpen",
-                        new SimpleFileDialog.SimpleFileDialogListener()
-                        {
-                            @Override
-                            public void onChosenDir(String chosenDir)
+                    SimpleFileDialog FileOpenDialog =  new SimpleFileDialog(MainActivity.this, "FileOpen",
+                            new SimpleFileDialog.SimpleFileDialogListener()
                             {
-                                String chosenFile;
-                                // The code in this function will be executed when the dialog OK button is pushed
-                                chosenFile = chosenDir;
-                                //toastLong("Chosen FileOpenDialog File: " + chosenFile);
-                                try
+                                @Override
+                                public void onChosenDir(String chosenDir)
                                 {
-                                    String tmpDirStr = getTempFile("TMP", ".tmp");
-                                    File tmpDir = new File(tmpDirStr);
-                                    tmpDir.delete();
-
-                                    tmpDir.mkdirs();
-
-                                    ZipUtil.unzip(chosenFile, tmpDirStr);
-                                    Log.d("Unzip", "Unzipped File Successfully");
-                                    if(SignatureUtil.verifySignature(tmpDirStr, "PUBKEY", "SIGNATURE", "IMGFILE"))
+                                    String chosenFile;
+                                    // The code in this function will be executed when the dialog OK button is pushed
+                                    chosenFile = chosenDir;
+                                    //toastLong("Chosen FileOpenDialog File: " + chosenFile);
+                                    try
                                     {
-                                        toastLong("Verified");
-                                        Log.d("Info", "Verified");
+                                        String tmpDirStr = getTempFile("TMP", ".tmp");
+                                        File tmpDir = new File(tmpDirStr);
+                                        tmpDir.delete();
 
-                                        String imgFileStr = getOutPath();
+                                        tmpDir.mkdirs();
 
-                                        File fromFile = new File(tmpDirStr + "/IMGFILE");
-                                        File toFile = new File(imgFileStr);
+                                        ZipUtil.unzip(chosenFile, tmpDirStr);
+                                        Log.d("Unzip", "Unzipped File Successfully");
+                                        if(SignatureUtil.verifySignature(tmpDirStr, "CERT", "SIGNATURE", "IMGFILE"))
+                                        {
+                                            toastLong("Verified");
+                                            Log.d("Info", "Verified");
 
-                                        fromFile.renameTo(toFile);
+                                            String imgFileStr = getOutPath();
 
-                                        toastLong("Image Saved: " + imgFileStr);
+                                            File fromFile = new File(tmpDirStr + "/IMGFILE");
+                                            File toFile = new File(imgFileStr);
+
+                                            fromFile.renameTo(toFile);
+
+                                            toastLong("Image Saved: " + imgFileStr);
+                                        }
+                                        else
+                                        {
+                                            toastLong("Failed Verification");
+                                            Log.d("Info", "Failed");
+                                        }
+
+                                        rmDir(tmpDirStr);
                                     }
-                                    else
+                                    catch (IOException e)
                                     {
-                                        toastLong("Failed Verification");
-                                        Log.d("Info", "Failed");
+                                        toastLong("Error: "+e.getMessage());
+                                        e.printStackTrace();
                                     }
+                                    catch (NoSuchAlgorithmException e)
+                                    {
+                                        toastLong("Error: "+e.getMessage());
+                                        e.printStackTrace();
+                                    }
+                                    catch (InvalidKeyException e)
+                                    {
+                                        toastLong("Error: "+e.getMessage());
+                                        e.printStackTrace();
+                                    }
+                                    catch (SignatureException e)
+                                    {
+                                        toastLong("Error: "+e.getMessage());
+                                        e.printStackTrace();
+                                    }
+                                    catch (NoSuchProviderException e)
+                                    {
+                                        toastLong("Error: "+e.getMessage());
+                                        e.printStackTrace();
+                                    }
+                                    catch (InvalidKeySpecException e)
+                                    {
+                                        toastLong("Error: "+e.getMessage());
+                                        e.printStackTrace();
+                                    }
+                                    catch (CertificateException e) {
+                                        toastLong("Error: "+e.getMessage());
+                                        e.printStackTrace();
+                                    }
+                                }
+                            });
 
-                                    rmDir(tmpDirStr);
-                                }
-                                catch (IOException e)
-                                {
-                                    toastLong("Error: "+e.getMessage());
-                                    e.printStackTrace();
-                                }
-                                catch (NoSuchAlgorithmException e)
-                                {
-                                    toastLong("Error: "+e.getMessage());
-                                    e.printStackTrace();
-                                }
-                                catch (InvalidKeyException e)
-                                {
-                                    toastLong("Error: "+e.getMessage());
-                                    e.printStackTrace();
-                                }
-                                catch (SignatureException e)
-                                {
-                                    toastLong("Error: "+e.getMessage());
-                                    e.printStackTrace();
-                                }
-                                catch (NoSuchProviderException e)
-                                {
-                                    toastLong("Error: "+e.getMessage());
-                                    e.printStackTrace();
-                                }
-                                catch (InvalidKeySpecException e)
-                                {
-                                    toastLong("Error: "+e.getMessage());
-                                    e.printStackTrace();
-                                }
-                            }
-                        });
-
-                FileOpenDialog.Default_File_Name = "";
-                FileOpenDialog.chooseFile_or_Dir();
-            }
-        });
+                    FileOpenDialog.Default_File_Name = "";
+                    FileOpenDialog.chooseFile_or_Dir();
+                }
+            });
+        }
 
     }
 
@@ -158,7 +170,7 @@ public class MainActivity extends AppCompatActivity
                     String signFile = getTempFile("SIG", ".sig");
                     SignatureUtil.writeBytesToFile(sigBytes, signFile);
                     String zipFile = getZipFilePath();
-                    ZipUtil.zip(imgFile, signFile, getCertDir()+"/pubkey", zipFile);
+                    ZipUtil.zip(imgFile, signFile, getCertDir()+"/cert", zipFile);
 
                     removeFile(imgFile);
                     removeFile(signFile);
@@ -168,7 +180,7 @@ public class MainActivity extends AppCompatActivity
                 catch (Exception e)
                 {
                     Log.d("error", e.getMessage(), e);
-                    Toast.makeText(MainActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
                 }
 
             }
@@ -249,7 +261,7 @@ public class MainActivity extends AppCompatActivity
 
     private void toastLong(String msg)
     {
-        Toast.makeText(MainActivity.this, msg, Toast.LENGTH_LONG).show();
+        Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
     }
 
 }

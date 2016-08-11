@@ -3,6 +3,7 @@ package edu.rivier.lucky.itzme;
 import java.io.*;
 import java.security.*;
 import java.security.spec.*;
+import java.security.cert.*;
 
 public class SignatureUtil
 {
@@ -18,10 +19,10 @@ public class SignatureUtil
 
 		PKCS8EncodedKeySpec privKeySpec = new PKCS8EncodedKeySpec(encKey);
 
-		KeyFactory keyFactory = KeyFactory.getInstance("DSA");//, "SUN");
+		KeyFactory keyFactory = KeyFactory.getInstance("RSA");//, "SUN");
 		PrivateKey privKey = keyFactory.generatePrivate(privKeySpec);
 
-		Signature dsa = Signature.getInstance("SHA1withDSA");//, "SUN");
+		Signature dsa = Signature.getInstance("SHA1withRSA");//, "SUN");
 		dsa.initSign(privKey);
 
 		FileInputStream fis = new FileInputStream(filePath);
@@ -42,13 +43,20 @@ public class SignatureUtil
 	}
 	
 	/* Method to validate given file against signature file using public key */
-	static boolean verifySignature(String dir, String pubKeyFile, String sigFilePath, String dataFilePath)
+	static boolean verifySignature(String dir, String certFile, String sigFilePath, String dataFilePath)
 			throws FileNotFoundException, IOException, SignatureException, NoSuchAlgorithmException, 
-					InvalidKeySpecException, InvalidKeyException, NoSuchProviderException
+					InvalidKeySpecException, InvalidKeyException, NoSuchProviderException, CertificateException
 	{
 		boolean result = false;
 		
-		FileInputStream keyfis = new FileInputStream(dir + "/" + pubKeyFile);
+		FileInputStream keyfis = new FileInputStream(dir + "/" + certFile);
+
+		CertificateFactory certFactory = CertificateFactory.getInstance("X.509");
+
+		X509Certificate cert = (X509Certificate)certFactory.generateCertificate(keyfis);
+		PublicKey pubKey = cert.getPublicKey();
+
+		/*
 		byte[] encKey = new byte[keyfis.available()];  
 		keyfis.read(encKey);
 
@@ -57,7 +65,9 @@ public class SignatureUtil
 		X509EncodedKeySpec pubKeySpec = new X509EncodedKeySpec(encKey);
 
 		KeyFactory keyFactory = KeyFactory.getInstance("DSA");
+
 		PublicKey pubKey = keyFactory.generatePublic(pubKeySpec);
+		*/
 
 		/* input the signature bytes */
 		FileInputStream sigfis = new FileInputStream(dir + "/" + sigFilePath);
@@ -67,7 +77,7 @@ public class SignatureUtil
 		sigfis.close();
 
 		/* create a Signature object and initialize it with the public key */
-		Signature sig = Signature.getInstance("SHA1withDSA");
+		Signature sig = Signature.getInstance("SHA1withRSA");
 		sig.initVerify(pubKey);
 
 		/* Update and verify the data */
