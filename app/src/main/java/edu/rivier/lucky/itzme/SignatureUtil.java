@@ -10,7 +10,6 @@ public class SignatureUtil
 	/* Method to create signature for a given file using private key */
 	static byte[] signFile(String privKeyFile, String filePath) throws IOException, SignatureException, InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, InvalidKeySpecException
 	{
-		
 		FileInputStream keyfis = new FileInputStream(privKeyFile);
 		byte[] encKey = new byte[keyfis.available()];  
 		keyfis.read(encKey);
